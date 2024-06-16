@@ -1,0 +1,59 @@
+plugins {
+	id 'java'
+	id 'jacoco'
+	id 'maven-publish'
+	id 'org.springframework.boot' version '3.2.0'
+	id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'by.potapenko'
+version = "$version_project"
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+dependencies {
+	implementation ("org.springdoc:springdoc-openapi-starter-webmvc-ui:$openapi_version",
+			        "org.springframework.boot:spring-boot-starter-web",
+			        "org.springframework.cloud:spring-cloud-starter-openfeign:$openfeign_version",
+			        "org.springframework.boot:spring-boot-starter-data-jpa",
+			        "org.springframework.boot:spring-boot-starter-validation")
+
+	compileOnly "org.projectlombok:lombok:$lombok_version"
+	annotationProcessor "org.projectlombok:lombok:$lombok_version"
+
+	testImplementation ("org.springframework.boot:spring-boot-starter-test",
+			            "org.junit.jupiter:junit-jupiter-api:$junit_version",
+			            "org.wiremock:wiremock:$wiremock_version")
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+}
+
+configurations.configureEach {
+	resolutionStrategy.eachDependency {
+		if (requested.group == "org.eclipse.jetty") {
+			useVersion("11.0.18")
+			because("Jetty 12.x.x from Spring Boot 3.2.x is incompatible with Wiremock 3.3.x.")
+		}
+	}
+}
+
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+jacocoTestReport {
+	dependsOn test
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					"com/example/creditservice/CreditServiceApplication.java"
+			])
+		}))
+	}
+}

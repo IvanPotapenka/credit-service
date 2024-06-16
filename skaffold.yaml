@@ -1,0 +1,12 @@
+apiVersion: skaffold/v4beta8
+kind: Config
+metadata:
+  name: credit-service
+build:
+  artifacts:
+    - image: credit-service
+      docker:
+        dockerfile: Dockerfile
+manifests:
+  rawYaml:
+    - ./k8s/credit-service/*.yaml
